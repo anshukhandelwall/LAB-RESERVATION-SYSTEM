@@ -1,102 +1,118 @@
-const Database = require('better-sqlite3');
-const path = require('path');
+require('dotenv').config();
+const mongoose = require('mongoose');
 
-const DB_PATH = path.join(__dirname, '..', 'lab_reservation.db');
-const db = new Database(DB_PATH);
+// ─── Define Schemas ───────────────────────────────────────────────────────────
 
-// Enable WAL mode for better concurrency
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, default: 'student' },
+  student_id: String,
+  department: String,
+}, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
+const equipmentSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  lab: { type: String, required: true },
+  category: { type: String, required: true },
+  description: String,
+  total_slots: { type: Number, default: 1 },
+  status: { type: String, default: 'available' },
+  image_url: String,
+}, { timestamps: { createdAt: 'created_at', updatedAt: false } });
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    name        TEXT    NOT NULL,
-    email       TEXT    NOT NULL UNIQUE,
-    password    TEXT    NOT NULL,
-    role        TEXT    NOT NULL DEFAULT 'student',
-    student_id  TEXT,
-    department  TEXT,
-    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
+const reservationSchema = new mongoose.Schema({
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  equipment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipment', required: true },
+  date: { type: String, required: true }, // YYYY-MM-DD
+  start_time: { type: String, required: true }, // HH:MM
+  end_time: { type: String, required: true }, // HH:MM
+  status: { type: String, default: 'confirmed' },
+  notes: String,
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } });
 
-  CREATE TABLE IF NOT EXISTS equipment (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    name         TEXT    NOT NULL,
-    lab          TEXT    NOT NULL,
-    category     TEXT    NOT NULL,
-    description  TEXT,
-    total_slots  INTEGER NOT NULL DEFAULT 1,
-    status       TEXT    NOT NULL DEFAULT 'available',
-    image_url    TEXT,
-    created_at   TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
+const usageLogSchema = new mongoose.Schema({
+  reservation_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Reservation' },
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  equipment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipment' },
+  action: { type: String, required: true },
+  details: String,
+  ip_address: String,
+}, { timestamps: { createdAt: 'timestamp', updatedAt: false } });
 
-  CREATE TABLE IF NOT EXISTS reservations (
-    id           INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id      INTEGER NOT NULL REFERENCES users(id),
-    equipment_id INTEGER NOT NULL REFERENCES equipment(id),
-    date         TEXT    NOT NULL,
-    start_time   TEXT    NOT NULL,
-    end_time     TEXT    NOT NULL,
-    status       TEXT    NOT NULL DEFAULT 'confirmed',
-    notes        TEXT,
-    created_at   TEXT    NOT NULL DEFAULT (datetime('now')),
-    updated_at   TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
+// ─── JSON Transform (Convert _id to id) ───────────────────────────────────────
+const transformOptions = {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+  }
+};
+userSchema.set('toJSON', transformOptions);
+equipmentSchema.set('toJSON', transformOptions);
+reservationSchema.set('toJSON', transformOptions);
+usageLogSchema.set('toJSON', transformOptions);
 
-  CREATE TABLE IF NOT EXISTS usage_logs (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    reservation_id INTEGER REFERENCES reservations(id),
-    user_id        INTEGER REFERENCES users(id),
-    equipment_id   INTEGER REFERENCES equipment(id),
-    action         TEXT    NOT NULL,
-    details        TEXT,
-    ip_address     TEXT,
-    timestamp      TEXT    NOT NULL DEFAULT (datetime('now'))
-  );
+// ─── Models ───────────────────────────────────────────────────────────────────
+const User = mongoose.model('User', userSchema);
+const Equipment = mongoose.model('Equipment', equipmentSchema);
+const Reservation = mongoose.model('Reservation', reservationSchema);
+const UsageLog = mongoose.model('UsageLog', usageLogSchema);
 
-  CREATE INDEX IF NOT EXISTS idx_reservations_equipment_date
-    ON reservations(equipment_id, date, status);
-  CREATE INDEX IF NOT EXISTS idx_reservations_user
-    ON reservations(user_id, status);
-  CREATE INDEX IF NOT EXISTS idx_usage_logs_timestamp
-    ON usage_logs(timestamp);
-`);
-
-
-const helpers = {
-  
-  isSlotAvailable(equipmentId, date, startTime, endTime, excludeReservationId = null) {
-    let sql = `
-      SELECT COUNT(*) as cnt FROM reservations
-      WHERE equipment_id = ?
-        AND date = ?
-        AND status = 'confirmed'
-        AND start_time < ?
-        AND end_time   > ?
-    `;
-    const params = [equipmentId, date, endTime, startTime];
-    if (excludeReservationId) {
-      sql += ` AND id != ?`;
-      params.push(excludeReservationId);
-    }
-    const row = db.prepare(sql).get(...params);
-
-    // Compare booked count against total_slots
-    const eq = db.prepare('SELECT total_slots FROM equipment WHERE id = ?').get(equipmentId);
-    if (!eq) return false;
-    return row.cnt < eq.total_slots;
-  },
-
-  /** Insert a usage log entry. */
-  log(action, { reservationId = null, userId = null, equipmentId = null, details = '', ip = '' } = {}) {
-    db.prepare(`
-      INSERT INTO usage_logs (reservation_id, user_id, equipment_id, action, details, ip_address)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(reservationId, userId, equipmentId, action, details, ip);
+// ─── Connection Logic ─────────────────────────────────────────────────────────
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ MongoDB Connected');
+  } catch (err) {
+    console.error('❌ MongoDB Connection Error:', err);
+    process.exit(1);
   }
 };
 
-module.exports = { db, ...helpers };
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const isSlotAvailable = async (equipmentId, date, startTime, endTime, excludeReservationId = null) => {
+  const query = {
+    equipment_id: equipmentId,
+    date,
+    status: 'confirmed',
+    start_time: { $lt: endTime },
+    end_time: { $gt: startTime }
+  };
+  if (excludeReservationId) {
+    query._id = { $ne: excludeReservationId };
+  }
+  const count = await Reservation.countDocuments(query);
+  const eq = await Equipment.findById(equipmentId);
+  if (!eq) return false;
+  return count < eq.total_slots;
+};
+
+const log = async (action, { reservationId = null, userId = null, equipmentId = null, details = '', ip = '' } = {}) => {
+  try {
+    await UsageLog.create({
+      reservation_id: reservationId,
+      user_id: userId,
+      equipment_id: equipmentId,
+      action,
+      details,
+      ip_address: ip
+    });
+  } catch (err) {
+    console.error('Error writing usage log:', err);
+  }
+};
+
+module.exports = {
+  connectDB,
+  User,
+  Equipment,
+  Reservation,
+  UsageLog,
+  isSlotAvailable,
+  log,
+  mongoose
+};

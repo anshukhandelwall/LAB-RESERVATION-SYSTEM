@@ -3,6 +3,7 @@ const cors    = require('cors');
 const path    = require('path');
 const jwt     = require('jsonwebtoken');
 
+const { connectDB } = require('./db');
 const { JWT_SECRET } = require('./routes/auth');
 
 const app  = express();
@@ -51,8 +52,10 @@ app.use((err, req, res, _next) => {
   res.status(500).json({ error: 'Internal server error.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🔬 Lab Reservation System running at http://localhost:${PORT}`);
-  console.log(`   Admin login: admin@lab.edu / admin123`);
-  console.log(`   Student login: alice@uni.edu / student123\n`);
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`\n🔬 Lab Reservation System running at http://localhost:${PORT}`);
+    console.log(`   Admin login: admin@lab.edu / admin123`);
+    console.log(`   Student login: alice@uni.edu / student123\n`);
+  });
 });
