@@ -12,7 +12,11 @@ const PORT = process.env.PORT || 3000;
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// API Status Route
+app.get('/', (req, res) => {
+  res.json({ message: '🔬 Lab Reservation API is running', status: 'OK' });
+});
 
 // JWT Auth middleware — attaches req.user if token present
 app.use((req, res, next) => {
@@ -41,10 +45,7 @@ app.use('/api/equipment',    require('./routes/equipment'));
 app.use('/api/reservations', requireAuth, require('./routes/reservations'));
 app.use('/api/admin',        requireAdmin, require('./routes/admin'));
 
-// SPA fallback
-app.get('/{*path}', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
-});
+// SPA fallback removed to keep backend as pure API
 
 // ─── Error handler ────────────────────────────────────────────────────────────
 app.use((err, req, res, _next) => {
