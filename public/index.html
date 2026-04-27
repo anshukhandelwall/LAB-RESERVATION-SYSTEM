@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LabReserve — Laboratory Equipment Booking System</title>
+  <meta name="description" content="Reserve laboratory equipment and experiment slots. Track usage, prevent overbooking, and analyze utilization with LabReserve." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── AUTH OVERLAY ────────────────────────────────────────────────────────── -->
+<div id="auth-overlay" class="auth-overlay">
+  <div class="auth-bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="auth-card glass">
+    <div class="auth-logo">
+      <span class="logo-icon">🔬</span>
+      <span class="logo-text">LabReserve</span>
+    </div>
+    <p class="auth-tagline">Smart laboratory booking for modern science</p>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- Login Form -->
+    <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="login-email">Email address</label>
+        <input id="login-email" type="email" placeholder="you@university.edu" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input id="login-password" type="password" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <div id="login-error" class="form-error hidden"></div>
+      <button type="submit" class="btn-primary btn-full" id="login-btn">Sign In</button>
+      <p class="auth-hint">Demo: <code>admin@lab.edu</code> / <code>admin123</code></p>
+    </form>
+
+   
+    <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reg-name">Full name</label>
+          <input id="reg-name" type="text" placeholder="Jane Smith" required />
+        </div>
+        <div class="form-group">
+          <label for="reg-sid">Student ID</label>
+          <input id="reg-sid" type="text" placeholder="STU0123" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="reg-email">Email address</label>
+        <input id="reg-email" type="email" placeholder="you@university.edu" required />
+      </div>
+      <div class="form-group">
+        <label for="reg-dept">Department</label>
+        <input id="reg-dept" type="text" placeholder="Chemistry" />
+      </div>
+      <div class="form-group">
+        <label for="reg-password">Password</label>
+        <input id="reg-password" type="password" placeholder="min. 6 characters" required minlength="6" />
+      </div>
+      <div id="reg-error" class="form-error hidden"></div>
+      <button type="submit" class="btn-primary btn-full" id="reg-btn">Create Account</button>
+    </form>
+  </div>
+</div>
+
+
+<div id="app" class="app hidden">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="logo-icon">🔬</span>
+      <span class="logo-text">LabReserve</span>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav">
+     
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info" id="sidebar-user"></div>
+      <button class="btn-ghost btn-sm" onclick="logout()" id="logout-btn">Sign out</button>
+    </div>
+  </aside>
+
+
+  <main class="main-content" id="main-content">
+    <div id="page-container"></div>
+  </main>
+
+</div>
+
+
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
+  <div class="modal glass" id="modal-box">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+
+<div id="toast-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
