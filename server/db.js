@@ -64,7 +64,7 @@ const UsageLog = mongoose.model('UsageLog', usageLogSchema);
 // ─── Connection Logic ─────────────────────────────────────────────────────────
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, { dbName: 'lab_reservation_db' });
     console.log('✅ MongoDB Connected');
   } catch (err) {
     console.error('❌ MongoDB Connection Error:', err);

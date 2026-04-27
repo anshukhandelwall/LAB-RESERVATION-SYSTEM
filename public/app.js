@@ -307,7 +307,7 @@ async function renderEquipment(container) {
   function render(list) {
     if (!list.length) return '<div class="empty-state"><div class="empty-state-icon">??</div><p>No equipment found.</p></div>';
     return `<div class="cards-grid">${list.map(eq => `
-      <div class="eq-card" onclick="openEquipmentDetail(${eq.id})">
+      <div class="eq-card" onclick="openEquipmentDetail('${eq.id}')">
         <div class="eq-card-header">
           <span class="eq-icon">${categoryIcon(eq.category)}</span>
           <span class="eq-badge badge-${eq.status}">${eq.status}</span>
@@ -363,7 +363,7 @@ function filterEquipment() {
   const grid = document.getElementById('eq-grid');
   if (grid) grid.innerHTML = list.length
     ? `<div class="cards-grid">${list.map(eq => `
-      <div class="eq-card" onclick="openEquipmentDetail(${eq.id})">
+      <div class="eq-card" onclick="openEquipmentDetail('${eq.id}')">
         <div class="eq-card-header">
           <span class="eq-icon">${categoryIcon(eq.category)}</span>
           <span class="eq-badge badge-${eq.status}">${eq.status}</span>
@@ -390,10 +390,10 @@ async function openEquipmentDetail(id) {
     </div>
     ${eq.status === 'available' ? `
     <div class="form-group"><label>Select Date</label>
-      <input type="date" id="book-date" value="${today}" min="${today}" onchange="loadAvailability(${id})" />
+      <input type="date" id="book-date" value="${today}" min="${today}" onchange="loadAvailability('${id}')" />
     </div>
     <div id="availability-display" style="margin:12px 0"></div>
-    <form onsubmit="submitBooking(event,${id})">
+    <form onsubmit="submitBooking(event,'${id}')">
       <div class="form-row">
         <div class="form-group"><label>Start Time</label><input type="time" id="book-start" value="09:00" required /></div>
         <div class="form-group"><label>End Time</label><input type="time" id="book-end" value="11:00" required /></div>
@@ -512,7 +512,7 @@ async function renderMyBookings(container) {
               <td>${fmtDate(r.date)}</td>
               <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">${r.start_time}�${r.end_time}</td>
               <td><span class="badge badge-${r.status}">${r.status}</span></td>
-              <td>${r.status==='confirmed' ? `<button class="btn-danger btn-sm" onclick="cancelReservation(${r.id})">Cancel</button>` : '�'}</td>
+              <td>${r.status==='confirmed' ? `<button class="btn-danger btn-sm" onclick="cancelReservation('${r.id}')">Cancel</button>` : '�'}</td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -545,7 +545,7 @@ async function renderAllBookings(container) {
               <td>${fmtDate(r.date)}</td>
               <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">${r.start_time}�${r.end_time}</td>
               <td><span class="badge badge-${r.status}">${r.status}</span></td>
-              <td>${r.status==='confirmed' ? `<button class="btn-danger btn-sm" onclick="cancelReservation(${r.id})">Cancel</button>` : '�'}</td>
+              <td>${r.status==='confirmed' ? `<button class="btn-danger btn-sm" onclick="cancelReservation('${r.id}')">Cancel</button>` : '�'}</td>
             </tr>`).join('')}
           </tbody>
         </table>
