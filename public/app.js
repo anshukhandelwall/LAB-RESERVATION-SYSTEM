@@ -2,7 +2,7 @@
    LabReserve — SPA Core (auth, routing, API, utilities)
    ═══════════════════════════════════════════════════════════════ */
 
-const API = '/api';
+const API = 'https://lab-reservation-system-2d6d.onrender.com/api';
 let currentUser = null;
 
 // ─── API helper ──────────────────────────────────────────────────────────────
